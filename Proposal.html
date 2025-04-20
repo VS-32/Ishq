@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Proposal for Akshaya</title>
+  
+  <!-- Embedded CSS -->
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; overflow:hidden; font-family:Arial, sans-serif; background-color: red; }
+    #bg-video { display:none; }
+    .overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); z-index:-1; }
+    .content { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; color:#fff; padding:20px; z-index:10; }
+    .content h1 { font-size:3em; margin-bottom:.5em; }
+    .content p { font-size:1.5em; margin-bottom:1.5em; }
+    .buttons { margin-top:1em; }
+    .btn { display:inline-block; padding:.75em 1.5em; margin:0 .5em; border:none; border-radius:30px; cursor:pointer; font-size:1.2em; transition:transform .3s; text-decoration:none; color:#fff; }
+    .btn:hover { transform:scale(1.1); }
+    .btn.yes { background:#e74c3c; }
+    .btn.no { background:#95a5a6; }
+    .btn.start { background:#f1c40f; color:#000; }
+    #audio-control { position:fixed; bottom:20px; right:20px; background:rgba(255,255,255,0.8); padding:.5em 1em; border-radius:20px; cursor:pointer; display:none; font-size:.9em; z-index:20; }
+    .hidden { opacity:0; visibility:hidden; transition:opacity 1s; }
+    .hint { margin-top:1em; color:#fff; font-size:1.1em; }
+
+    /* Burst Heart Animation */
+    .heart {
+      position: fixed;
+      width: 20px;
+      height: 20px;
+      background: red;
+      transform: rotate(45deg);
+      animation: burst 2s linear infinite;
+      z-index: 1;
+    }
+    .heart::before,
+    .heart::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: red;
+      border-radius: 50%;
+    }
+    .heart::before { top: -10px; left: 0; }
+    .heart::after { top: 0; left: -10px; }
+
+    @keyframes burst {
+      0% { transform: translateY(0) rotate(45deg); opacity: 1; }
+      50% { transform: translateY(-100vh) rotate(45deg); opacity: 0.5; }
+      100% { transform: translateY(-100vh) rotate(45deg); opacity: 0; }
+    }
+
+    /* Sparkle Animation */
+    .sparkle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: gold;
+      border-radius: 50%;
+      animation: sparkleAnim 1.5s ease-out infinite;
+    }
+
+    @keyframes sparkleAnim {
+      0% { transform: scale(0.5); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Burst Heart Effect -->
+  <script>
+    for (let i = 0; i < 50; i++) {
+      const heart = document.createElement('div');
+      heart.className = 'heart';
+      heart.style.left = Math.random() * 1000 + 'vw';
+      heart.style.animationDelay = Math.random() * 500 + 's';
+      heart.style.opacity = Math.random();
+      heart.style.transform = `scale(${Math.random() * 1 + 1})`;
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 3000);
+    }
+
+    // Sparkles that burst in the air
+    for (let i = 0; i < 100; i++) {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'sparkle';
+      sparkle.style.left = Math.random() * 100 + 'vw';
+      sparkle.style.top = Math.random() * 100 + 'vh';
+      sparkle.style.animationDelay = Math.random() * 2 + 's';
+      document.body.appendChild(sparkle);
+      setTimeout(() => sparkle.remove(), 3000);
+    }
+  </script>
+
+  <!-- Intro Page -->
+  <div class="content" id="page0">
+    <h1>Click here to start</h1>
+    <a href="#" class="btn start" data-target="start">Start Proposal</a>
+  </div>
+
+  <div class="content hidden" id="page1">
+    <h1>Hey Akshaya...</h1>
+    <p>Will you accept my proposal?</p>
+    <div class="buttons">
+      <a href="#" class="btn yes" data-target="yes">YES</a>
+      <a href="#" class="btn no" data-target="no">NO</a>
+    </div>
+  </div>
+
+  <div class="content hidden" id="page2">
+    <h1>Oh... okay then... let’s just get married anyway 😜</h1>
+    <div class="buttons">
+      <a href="#" class="btn yes" data-target="yes">YES</a>
+      <button id="no-btn" class="btn no">NO</button>
+    </div>
+  </div>
+
+  <div class="content hidden" id="page3">
+    <h1>You said YES!!! 🎉</h1>
+    <p>I promise to love you forever, Akshaya ❤️</p>
+    <button id="start-btn" class="btn start">Let's Start</button>
+  </div>
+
+  <!-- Single Audio Element -->
+  <audio id="pageAudio" loop></audio>
+  <div id="audio-control">🔊 Click to play music</div>
+
+  <!-- Embedded JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const pages = { 
+        page0: { el:document.getElementById('page0'), audio:'music/Oday-Oday.mp3' },
+        page1: { el:document.getElementById('page1'), audio:'music/Oday-Oday.mp3' },
+        page2: { el:document.getElementById('page2'), audio:'music/arrambam-en-fuse-pochu.mp3' },
+        page3: { el:document.getElementById('page3'), audio:'music/Oru-Paathi-Kadhavu.mp3' }
+      };
+      let current = 'page0';
+      const audio = document.getElementById('pageAudio');
+      const control = document.getElementById('audio-control');
+      const showPage = (key) => {
+        Object.values(pages).forEach(p => p.el.classList.add('hidden'));
+        pages[key].el.classList.remove('hidden');
+        audio.src = pages[key].audio;
+        playAudio();
+        current = key;
+
+        if (key === 'page3') {
+          // Create heart burst effect on YES page
+          for (let i = 0; i < 50; i++) {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.top = Math.random() * 100 + 'vh';
+            heart.style.animationDuration = Math.random() * 2 + 2 + 's';
+            heart.style.opacity = 1;
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 3000);
+          }
+        }
+      };
+
+      const playAudio = () => {
+        audio.play().then(() => control.style.display='none').catch(() => control.style.display='block');
+      };
+      control.addEventListener('click', playAudio);
+
+      document.querySelectorAll('.btn.start').forEach(btn => btn.addEventListener('click', e => {
+        e.preventDefault(); showPage('page1');
+      }));
+      document.querySelectorAll('.btn.yes').forEach(btn => btn.addEventListener('click', e => {
+        e.preventDefault(); showPage('page3');
+      }));
+      document.querySelectorAll('.btn.no').forEach(btn => btn.addEventListener('click', e => {
+        e.preventDefault(); showPage(current==='page1'?'page2':'page3');
+      }));
+
+      const noBtn = document.getElementById('no-btn');
+      noBtn && noBtn.addEventListener('click', e => {
+        e.preventDefault(); noBtn.remove();
+        const hint = document.createElement('p'); hint.className='hint';
+        hint.textContent='You can only click YES to continue 😏';
+        pages['page2'].el.querySelector('.buttons').appendChild(hint);
+      });
+
+    //  showPage('page0');
+    });
+  </script>
+</body>
+</html>
